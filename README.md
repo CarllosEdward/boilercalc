@@ -2,6 +2,10 @@
 
 Uma aplicação web moderna para cálculos de parâmetros de combustão em caldeiras industriais.
 
+## Versão Web (GitHub Pages)
+
+Esta aplicação foi convertida para funcionar diretamente no navegador! Você pode acessá-la através do GitHub Pages (após ativado no repositório).
+
 ## Funcionalidades
 
 - Cálculo de PCI (Poder Calorífico Inferior)
@@ -13,12 +17,11 @@ Uma aplicação web moderna para cálculos de parâmetros de combustão em calde
 
 ## Tecnologias
 
-- Python 3
-- Flask
-- NumPy
 - HTML5 / CSS3 (Design Responsivo)
+- JavaScript (Lógica de cálculo client-side)
+- Python (Versão original CLI/Flask incluída para referência)
 
-## Como Usar
+## Como Usar (Versão Python Local)
 
 1. Instale as dependências:
    ```bash

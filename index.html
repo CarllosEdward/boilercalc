@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Combustão Industrial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #ff5722;
+            --secondary-accent: #ff9800;
+            --input-bg: #2c2c2c;
+            --border-color: #333;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            width: 100%;
+            max-width: 650px;
+            border-top: 4px solid var(--accent-color);
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 1.8rem;
+        }
+        .icon-boiler {
+            width: 48px;
+            height: 48px;
+            fill: var(--accent-color);
+            filter: drop-shadow(0 0 5px rgba(255, 87, 34, 0.5));
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2);
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .col {
+            flex: 1;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .results {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            background-color: #252525;
+            border-radius: 12px;
+            border-left: 5px solid var(--secondary-accent);
+            animation: slideUp 0.5s ease-out;
+            display: none; /* Hidden by default */
+        }
+        .error-box {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            background-color: #252525;
+            border-radius: 12px;
+            border-left: 5px solid #f44336;
+            animation: slideUp 0.5s ease-out;
+            display: none;
+        }
+        .error-title {
+            color: #f44336; 
+            margin-top: 0;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.8rem;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .result-label {
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+        .result-value {
+            font-weight: bold;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+        .highlight {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+        @media (max-width: 600px) {
+            .row { flex-direction: column; gap: 0; }
+            .container { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <svg class="icon-boiler" viewBox="0 0 24 24">
+                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,7V13L16.2,16.1L17,14.9L12.5,12.2V7H11Z" />
+                <path d="M7,12c0,2.8 2.2,5 5,5s5-2.2 5-5s-2.2-5-5-5S7,9.2 7,12z M12,15c-1.7,0-3-1.3-3-3s1.3-3 3-3s3,1.3 3,3S13.7,15 12,15z" fill="currentColor"/>
+            </svg>
+            Boiler Calc
+        </h1>
+        <form id="calcForm">
+            <div class="row">
+                <div class="col form-group">
+                    <label>Pressão de Vapor (bar)</label>
+                    <input type="number" step="0.01" id="p_vapor" value="10.0">
+                </div>
+                <div class="col form-group">
+                    <label>Temp. Alimentação (°C)</label>
+                    <input type="number" step="0.1" id="t_alimentacao" value="100.0">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col form-group">
+                    <label>Vazão da Caldeira (kg/h)</label>
+                    <input type="number" step="1" id="vazao_vapor" value="5000">
+                </div>
+                <div class="col form-group">
+                    <label>Eficiência (0.0 - 1.0)</label>
+                    <input type="number" step="0.01" id="eficiencia" value="0.75">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col form-group">
+                    <label>Umidade do Combustível</label>
+                    <input type="number" step="0.01" id="umidade" value="0.20">
+                </div>
+                <div class="col form-group">
+                    <label>Excesso de Ar (Coef.)</label>
+                    <input type="number" step="0.01" id="excesso" value="1.25">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Configuração do Combustível</label>
+                <select id="opcao" onchange="toggleOpcao()">
+                    <option value="predefinido">Combustível Padrão</option>
+                    <option value="custom">Composição Personalizada</option>
+                </select>
+            </div>
+
+            <div id="predefinido" class="form-group" style="transition: opacity 0.3s; opacity: 1;">
+                <label>Tipo de Combustível</label>
+                <select id="tipo">
+                    <option value="lenha">Lenha</option>
+                    <option value="bagaco">Bagaço de Cana</option>
+                    <option value="carvao">Carvão Mineral</option>
+                    <option value="oleo">Óleo Combustível</option>
+                </select>
+            </div>
+
+            <div id="custom" style="display:none; transition: opacity 0.3s; opacity: 0;">
+                <div class="row">
+                    <div class="col form-group">
+                        <label>% Carbono (C)</label>
+                        <input type="number" step="0.1" id="c" value="48.5">
+                    </div>
+                    <div class="col form-group">
+                        <label>% Hidrogênio (H)</label>
+                        <input type="number" step="0.1" id="h" value="6.2">
+                    </div>
+                    <div class="col form-group">
+                        <label>% Oxigênio (O)</label>
+                        <input type="number" step="0.1" id="o" value="43.3">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col form-group">
+                        <label>% Enxofre (S)</label>
+                        <input type="number" step="0.1" id="s" value="0">
+                    </div>
+                    <div class="col form-group">
+                        <label>% Nitrogênio (N)</label>
+                        <input type="number" step="0.1" id="n" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn" onclick="calcular()">Calcular Parâmetros</button>
+        </form>
+
+        <div id="errorBox" class="error-box">
+            <h3 class="error-title">Erro no Cálculo</h3>
+            <p id="errorMsg"></p>
+        </div>
+
+        <div id="resultsBox" class="results">
+            <h3 style="margin-top: 0; color: var(--secondary-accent); border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px;">Resultados da Análise</h3>
+            
+            <div class="result-item">
+                <span class="result-label">PCI (Poder Calorífico)</span>
+                <span class="result-value"><span id="res_pci"></span> kcal/kg</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Calor Útil Gerado</span>
+                <span class="result-value"><span id="res_q_util"></span> kcal/h</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Energia de Entrada</span>
+                <span class="result-value"><span id="res_q_entrada"></span> kcal/h</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Consumo de Combustível</span>
+                <span class="result-value highlight"><span id="res_m_combustivel"></span> kg/h</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Relação Ar/Combustível (Teórica)</span>
+                <span class="result-value"><span id="res_afr_teorica"></span> kg/kg</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Relação Ar/Combustível (Real)</span>
+                <span class="result-value"><span id="res_afr_real"></span> kg/kg</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Vazão de Ar (Massa)</span>
+                <span class="result-value"><span id="res_m_ar"></span> kg/h</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Vazão de Ar (Volume)</span>
+                <span class="result-value"><span id="res_v_ar"></span> m³/h</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tabela de vapor saturado (Pressão [bar], hg [kcal/kg])
+        // Dados originais do Python script
+        const steamTable = [
+            {p: 0.02, hg: 623.11}, {p: 0.03, hg: 632.55}, {p: 0.04, hg: 639.42},
+            {p: 0.05, hg: 644.95}, {p: 0.06, hg: 649.63}, {p: 0.07, hg: 653.67},
+            {p: 0.08, hg: 657.24}, {p: 0.09, hg: 660.49}, {p: 0.1, hg: 663.45},
+            {p: 0.2, hg: 683.77}, {p: 0.3, hg: 696.78}, {p: 0.4, hg: 706.39},
+            {p: 0.5, hg: 714.07}, {p: 0.6, hg: 720.45}, {p: 0.7, hg: 725.96},
+            {p: 0.8, hg: 730.83}, {p: 0.9, hg: 735.17}, {p: 1.0, hg: 739.08},
+            {p: 2.0, hg: 767.59}, {p: 5.0, hg: 809.42}, {p: 10.0, hg: 845.60},
+            {p: 20.0, hg: 885.45}, {p: 30.0, hg: 910.59}
+        ];
+
+        const pciPredefinidos = {
+            'lenha': 3440,
+            'bagaco': 1800,
+            'carvao': 6000,
+            'oleo': 9500
+        };
+
+        const composicoesPredefinidas = {
+            'lenha': {c: 48.5, h: 6.2, o: 43.3, s: 0, n: 0.2},
+            'bagaco': {c: 48.5, h: 7, o: 44, s: 0, n: 0.5},
+            'carvao': {c: 90, h: 3, o: 3, s: 1, n: 1},
+            'oleo': {c: 85, h: 12, o: 0.5, s: 2, n: 0}
+        };
+
+        function toggleOpcao() {
+            const opcao = document.getElementById('opcao').value;
+            const predefinido = document.getElementById('predefinido');
+            const custom = document.getElementById('custom');
+            
+            if (opcao === 'predefinido') {
+                predefinido.style.display = 'block';
+                custom.style.display = 'none';
+                setTimeout(() => predefinido.style.opacity = 1, 10);
+            } else {
+                predefinido.style.display = 'none';
+                custom.style.display = 'block';
+                setTimeout(() => custom.style.opacity = 1, 10);
+            }
+        }
+
+        function interpolate(x, x0, x1, y0, y1) {
+            return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+        }
+
+        function getEnthalpy(pressure) {
+            // Check bounds
+            if (pressure < steamTable[0].p || pressure > steamTable[steamTable.length - 1].p) {
+                return null;
+            }
+            
+            // Find interval
+            for (let i = 0; i < steamTable.length - 1; i++) {
+                if (pressure >= steamTable[i].p && pressure <= steamTable[i+1].p) {
+                    return interpolate(pressure, steamTable[i].p, steamTable[i+1].p, steamTable[i].hg, steamTable[i+1].hg);
+                }
+            }
+            return null;
+        }
+
+        function calcular() {
+            // Inputs
+            const p_vapor = parseFloat(document.getElementById('p_vapor').value);
+            const t_alimentacao = parseFloat(document.getElementById('t_alimentacao').value);
+            const vazao_vapor = parseFloat(document.getElementById('vazao_vapor').value);
+            const umidade = parseFloat(document.getElementById('umidade').value);
+            const eficiencia = parseFloat(document.getElementById('eficiencia').value);
+            const excesso = parseFloat(document.getElementById('excesso').value);
+            const opcao = document.getElementById('opcao').value;
+
+            // Hide previous results/errors
+            document.getElementById('resultsBox').style.display = 'none';
+            document.getElementById('errorBox').style.display = 'none';
+
+            // Enthalpy Calculation
+            const h_vapor = getEnthalpy(p_vapor);
+            if (h_vapor === null) {
+                showError("Pressão fora do intervalo da tabela (0.02 a 30 bar).");
+                return;
+            }
+            const h_alimentacao = 1.0 * t_alimentacao;
+            const delta_h = h_vapor - h_alimentacao;
+            const q_util = vazao_vapor * delta_h;
+            const q_entrada = q_util / eficiencia;
+
+            // Fuel Calculation
+            let pci, composicao;
+
+            if (opcao === 'predefinido') {
+                const tipo = document.getElementById('tipo').value;
+                pci = pciPredefinidos[tipo];
+                const compPre = composicoesPredefinidas[tipo];
+                composicao = {
+                    c: compPre.c / 100,
+                    h: compPre.h / 100,
+                    o: compPre.o / 100,
+                    s: compPre.s / 100,
+                    n: compPre.n / 100
+                };
+            } else {
+                const c = parseFloat(document.getElementById('c').value);
+                const h = parseFloat(document.getElementById('h').value);
+                const o = parseFloat(document.getElementById('o').value);
+                const s = parseFloat(document.getElementById('s').value);
+                const n = parseFloat(document.getElementById('n').value);
+
+                // Calculate PCI
+                // pci_seco = 8080 * c + 34500 * (h - o / 8) + 2250 * s + 2500 * n
+                // inputs are in percentage, formula expects fraction? No, formula usually uses fraction or percentage depending on constants.
+                // Python script used: c/=100 etc. then 8080*c. So 8080 is for fraction.
+                
+                const c_f = c/100; const h_f = h/100; const o_f = o/100; const s_f = s/100; const n_f = n/100;
+                const pci_seco = 8080 * c_f + 34500 * (h_f - o_f / 8) + 2250 * s_f + 2500 * n_f;
+                pci = pci_seco * (1 - umidade) - 540 * umidade;
+
+                composicao = {c: c_f, h: h_f, o: o_f, s: s_f, n: n_f};
+            }
+
+            const m_combustivel = q_entrada / pci;
+
+            // Air Calculation
+            const fracao_seca = 1 - umidade;
+            const c_frac = composicao.c * fracao_seca;
+            const h_frac = composicao.h * fracao_seca;
+            const o_frac = composicao.o * fracao_seca;
+            const s_frac = composicao.s * fracao_seca;
+
+            const mol_c = (c_frac * 1000) / 12;
+            const mol_h_atomos = (h_frac * 1000) / 1;
+            const mol_o_atomos = (o_frac * 1000) / 16;
+            const mol_s = (s_frac * 1000) / 32;
+
+            const o2_c = mol_c;
+            const o2_h = mol_h_atomos / 4;
+            const o2_s = mol_s;
+            const o2_bruto = o2_c + o2_h + o2_s;
+            const o2_combustivel = mol_o_atomos / 2;
+            const o2_liquido = o2_bruto - o2_combustivel;
+
+            const mol_ar = o2_liquido / 0.21;
+            const afr_teorica = mol_ar * 29 / 1000;
+            const afr_real = afr_teorica * excesso;
+            const m_ar = m_combustivel * afr_real;
+            const rho_ar = 1.204;
+            const v_ar = m_ar / rho_ar;
+
+            // Display Results
+            document.getElementById('res_pci').innerText = pci.toFixed(2);
+            document.getElementById('res_q_util').innerText = q_util.toFixed(2);
+            document.getElementById('res_q_entrada').innerText = q_entrada.toFixed(2);
+            document.getElementById('res_m_combustivel').innerText = m_combustivel.toFixed(2);
+            document.getElementById('res_afr_teorica').innerText = afr_teorica.toFixed(2);
+            document.getElementById('res_afr_real').innerText = afr_real.toFixed(2);
+            document.getElementById('res_m_ar').innerText = m_ar.toFixed(2);
+            document.getElementById('res_v_ar').innerText = v_ar.toFixed(2);
+
+            document.getElementById('resultsBox').style.display = 'block';
+        }
+
+        function showError(msg) {
+            document.getElementById('errorMsg').innerText = msg;
+            document.getElementById('errorBox').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
