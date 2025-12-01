@@ -432,6 +432,121 @@
             for (let i = 0; i < steamTable.length - 1; i++) {
                 if (pressure >= steamTable[i].p && pressure <= steamTable[i + 1].p) {
                     return interpolate(pressure, steamTable[i].p, steamTable[i + 1].p, steamTable[i].hg, steamTable[i + 1].hg);
+                }
+            }
+            return null;
+        }
+
+        function calcular() {
+            // Inputs
+            const p_vapor = parseFloat(document.getElementById('p_vapor').value);
+            const t_alimentacao = parseFloat(document.getElementById('t_alimentacao').value);
+            const vazao_vapor = parseFloat(document.getElementById('vazao_vapor').value);
+            const umidade = parseFloat(document.getElementById('umidade').value);
+            const eficiencia = parseFloat(document.getElementById('eficiencia').value);
+            const excesso = parseFloat(document.getElementById('excesso').value);
+            const delta_p = parseFloat(document.getElementById('delta_p').value);
+            const eficiencia_vent = parseFloat(document.getElementById('eficiencia_vent').value);
+            const opcao = document.getElementById('opcao').value;
+
+            // Hide previous results/errors
+            document.getElementById('resultsBox').style.display = 'none';
+            document.getElementById('errorBox').style.display = 'none';
+
+            // Enthalpy Calculation
+            const h_vapor = getEnthalpy(p_vapor);
+            if (h_vapor === null) {
+                showError("Pressão fora do intervalo da tabela (0.02 a 30 bar).");
+                return;
+            }
+            const h_alimentacao = 1.0 * t_alimentacao;
+            const delta_h = h_vapor - h_alimentacao;
+            const q_util = vazao_vapor * delta_h;
+            const q_entrada = q_util / eficiencia;
+
+            // Fuel Calculation
+            let pci, composicao;
+
+            if (opcao === 'predefinido') {
+                const tipo = document.getElementById('tipo').value;
+                pci = pciPredefinidos[tipo];
+                const compPre = composicoesPredefinidas[tipo];
+                composicao = {
+                    c: compPre.c / 100,
+                    h: compPre.h / 100,
+                    o: compPre.o / 100,
+                    s: compPre.s / 100,
+                    n: compPre.n / 100
+                };
+            } else {
+                const c = parseFloat(document.getElementById('c').value);
+                const h = parseFloat(document.getElementById('h').value);
+                const o = parseFloat(document.getElementById('o').value);
+                const s = parseFloat(document.getElementById('s').value);
+                const n = parseFloat(document.getElementById('n').value);
+
+                // Calculate PCI
+                // pci_seco = 8080 * c + 34500 * (h - o / 8) + 2250 * s + 2500 * n
+                // inputs are in percentage, formula expects fraction? No, formula usually uses fraction or percentage depending on constants.
+                // Python script used: c/=100 etc. then 8080*c. So 8080 is for fraction.
+
+                const c_f = c / 100; const h_f = h / 100; const o_f = o / 100; const s_f = s / 100; const n_f = n / 100;
+                const pci_seco = 8080 * c_f + 34500 * (h_f - o_f / 8) + 2250 * s_f + 2500 * n_f;
+                pci = pci_seco * (1 - umidade) - 540 * umidade;
+
+                composicao = { c: c_f, h: h_f, o: o_f, s: s_f, n: n_f };
+            }
+
+            const m_combustivel = q_entrada / pci;
+
+            // Air Calculation
+            const fracao_seca = 1 - umidade;
+            const c_frac = composicao.c * fracao_seca;
+            const h_frac = composicao.h * fracao_seca;
+            const o_frac = composicao.o * fracao_seca;
+            const s_frac = composicao.s * fracao_seca;
+
+            const mol_c = (c_frac * 1000) / 12;
+            const mol_h_atomos = (h_frac * 1000) / 1;
+            const mol_o_atomos = (o_frac * 1000) / 16;
+            const mol_s = (s_frac * 1000) / 32;
+
+            const o2_c = mol_c;
+            const o2_h = mol_h_atomos / 4;
+            const o2_s = mol_s;
+            const o2_bruto = o2_c + o2_h + o2_s;
+            const o2_combustivel = mol_o_atomos / 2;
+            const o2_liquido = o2_bruto - o2_combustivel;
+
+            const mol_ar = o2_liquido / 0.21;
+            const afr_teorica = mol_ar * 29 / 1000;
+            const afr_real = afr_teorica * excesso;
+            const m_ar = m_combustivel * afr_real;
+            const rho_ar = 1.204;
+            const v_ar = m_ar / rho_ar;
+
+            // Fan Power Calculation
+            // Potência (kW) = (Vazão (m³/h) * Delta P (mmH2O)) / (367000 * Eficiência)
+            const potencia_vent = (v_ar * delta_p) / (367000 * eficiencia_vent);
+
+            // Display Results
+            document.getElementById('res_pci').innerText = pci.toFixed(2);
+            document.getElementById('res_q_util').innerText = q_util.toFixed(2);
+            document.getElementById('res_q_entrada').innerText = q_entrada.toFixed(2);
+            document.getElementById('res_m_combustivel').innerText = m_combustivel.toFixed(2);
+            document.getElementById('res_afr_teorica').innerText = afr_teorica.toFixed(2);
+            document.getElementById('res_afr_real').innerText = afr_real.toFixed(2);
+            document.getElementById('res_m_ar').innerText = m_ar.toFixed(2);
+            document.getElementById('res_v_ar').innerText = v_ar.toFixed(2);
+            document.getElementById('res_potencia_vent').innerText = potencia_vent.toFixed(2);
+
+            document.getElementById('resultsBox').style.display = 'block';
+        }
+
+        function showError(msg) {
+            document.getElementById('errorMsg').innerText = msg;
+            document.getElementById('errorBox').style.display = 'block';
+        }
     </script>
 </body>
 
